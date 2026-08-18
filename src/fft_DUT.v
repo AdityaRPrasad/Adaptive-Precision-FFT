@@ -6,8 +6,8 @@ module adaptive_fft_butterfly (
     input  wire       nreset,
     input  wire [7:0] ui_in,
     output wire [7:0] uo_out,
-    input  wire [7:0] uio_in,
-    output wire [7:0] uio_out,
+    input  wire [7:0] uio_in_reg,
+    output wire [7:0] uio_out_reg,
     output wire [7:0] uio_oe
 );
 
