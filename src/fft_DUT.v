@@ -501,9 +501,9 @@ module adaptive_fft_butterfly (
             rot_re        <= 8'sd0;
             rot_im        <= 8'sd0;
 
-            out_reg       <= 8'd0;
+            out_reg       <= 8'h00;
 
-            uio_out       <= 5'b0;
+            uio_out_reg   <= 5'b00000;
 
         end
 
@@ -512,7 +512,7 @@ module adaptive_fft_butterfly (
             start_d <= start_in;
 
             // VALID is asserted only during output cycles.
-            uio_out[3] <= 1'b0;
+            uio_out_reg[3] <= 1'b0;
 
 
             case (state)
@@ -524,9 +524,9 @@ module adaptive_fft_butterfly (
 
                 S_IDLE: begin
 
-                    uio_out[4]   <= 1'b0;
-                    uio_out[2]   <= escalated;
-                    uio_out[1:0] <= precision;
+                    uio_out_reg[4]   <= 1'b0;
+                    uio_out_reg[2]   <= escalated;
+                    uio_out_reg[1:0] <= precision;
 
                     if (start_pulse) begin
 
@@ -534,7 +534,7 @@ module adaptive_fft_butterfly (
 
                         budget_reg <= budget_in;
 
-                        uio_out[4] <= 1'b1;
+                        uio_out_reg[4] <= 1'b1;
 
                         state <= S_XI;
 
@@ -694,8 +694,8 @@ module adaptive_fft_butterfly (
                         $signed(xr) +
                         $signed(rot_re);
 
-                    uio_out[4] <= 1'b0;
-                    uio_out[3] <= 1'b1;
+                    uio_out_reg[4] <= 1'b0;
+                    uio_out_reg[3] <= 1'b1;
 
                     state <= S_O1;
 
@@ -750,9 +750,9 @@ module adaptive_fft_butterfly (
 
                     uio_out[3] <= 1'b1;
 
-                    uio_out[2] <= escalated;
+                    uio_out_reg[2] <= escalated;
 
-                    uio_out[1:0] <= precision;
+                    uio_out_reg[1:0] <= precision;
 
                     // Rotate to the next internal twiddle.
                     twiddle_index <=
