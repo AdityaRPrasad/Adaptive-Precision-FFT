@@ -2,6 +2,7 @@
  * Copyright (c) 2024 Your Name
  * SPDX-License-Identifier: Apache-2.0
  */
+`timescale 1ns/1ps
 
 `default_nettype none
 
