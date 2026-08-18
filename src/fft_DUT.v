@@ -712,7 +712,7 @@ module adaptive_fft_butterfly (
                         $signed(xi) +
                         $signed(rot_im);
 
-                    uio_out[3] <= 1'b1;
+                    uio_out_reg[3] <= 1'b1;
 
                     state <= S_O2;
 
@@ -731,7 +731,7 @@ module adaptive_fft_butterfly (
                         $signed(xr) -
                         $signed(rot_re);
 
-                    uio_out[3] <= 1'b1;
+                    uio_out_reg[3] <= 1'b1;
 
                     state <= S_O3;
 
@@ -748,7 +748,7 @@ module adaptive_fft_butterfly (
                         $signed(xi) -
                         $signed(rot_im);
 
-                    uio_out[3] <= 1'b1;
+                    uio_out_reg[3] <= 1'b1;
 
                     uio_out_reg[2] <= escalated;
 
