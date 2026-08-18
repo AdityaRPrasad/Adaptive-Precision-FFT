@@ -1,7 +1,6 @@
 `timescale 1ns/1ps
 `default_nettype none
 
-`timescale 1ns/1ps
 module adaptive_fft_butterfly (
     input  wire       clk,
     input  wire       nreset,
