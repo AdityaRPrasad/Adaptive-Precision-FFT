@@ -1,7 +1,7 @@
 `timescale 1ns/1ps
 `default_nettype none
 
-module tb_adaptive_fft_butterfly;
+module tb;
 
     reg        clk;
     reg        nreset;
