@@ -5,10 +5,12 @@ module tb;
 
     reg        clk;
     reg        nreset;
-    reg [7:0]  ui_in;
 
     wire [7:0] uo_out;
-    tri  [7:0] uio;
+    reg [7:0]  uio_in;
+    wire [7:0] uio_out;
+    wire [7:0] uio_oe;
+    
 
     // DUT drives uio[4:0].
     // Testbench drives only the input pins:
@@ -17,14 +19,15 @@ module tb;
     reg [1:0] budget_tb;
     reg       start_tb;
 
-    assign uio[7:5] = {budget_tb, start_tb};
 
     adaptive_fft_butterfly dut (
         .clk    (clk),
         .nreset (nreset),
         .ui_in  (ui_in),
         .uo_out (uo_out),
-        .uio    (uio)
+        .uio_in  (uio_in)
+        .uio_out  (uio_out)
+        .uio_oe  (uio_oe)
     );
 
     // ------------------------------------------------------------
@@ -256,10 +259,10 @@ module tb;
                 @(posedge clk);
                 #1;
 
-                if (uio[3] === 1'b1) begin
+                if (uio_out[3] === 1'b1) begin
                     if (observed_count == 0) begin
-                        precision_seen = uio[1:0];
-                        escalation_seen = uio[2];
+                        precision_seen = uio_out[1:0];
+                        escalation_seen = uio_out[2];
 
                         if (precision_seen !== p_exp[1:0]) begin
                             $display("ERROR: precision mismatch. Expected %0d, got %0d",
@@ -301,13 +304,13 @@ module tb;
             // Wait until the transaction has returned to IDLE.
             // This also confirms that BUSY is eventually deasserted.
             timeout_count = 0;
-            while ((uio[4] !== 1'b0) && (timeout_count < 10)) begin
+            while ((uio_out[4] !== 1'b0) && (timeout_count < 10)) begin
                 @(posedge clk);
                 #1;
                 timeout_count = timeout_count + 1;
             end
 
-            if (uio[4] !== 1'b0) begin
+            if (uio_out[4] !== 1'b0) begin
                 $display("ERROR: BUSY did not return low.");
                 failures = failures + 1;
             end
