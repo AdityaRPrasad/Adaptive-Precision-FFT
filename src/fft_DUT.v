@@ -6,7 +6,9 @@ module adaptive_fft_butterfly (
     input  wire       nreset,
     input  wire [7:0] ui_in,
     output wire [7:0] uo_out,
-    inout  wire [7:0] uio
+    input  wire [7:0] uio_in,
+    output wire [7:0] uio_out,
+    output wire [7:0] uio_oe
 );
 
     // ================================================================
@@ -46,18 +48,20 @@ module adaptive_fft_butterfly (
     //            10 = 8-bit
     // ================================================================
 
-    reg [4:0] uio_out;
+    reg [4:0] uio_out_reg;
     reg [7:0] out_reg;
 
-    assign uio[4:0] = uio_out;
+    assign uio_out = {3'b000, uio_out_reg};
 
+    assign uio_oe = 8'b00011111;
+    
     // Upper three bidirectional pins are inputs during operation.
-    assign uio[7:5] = 3'bz;
+   
 
     assign uo_out = out_reg;
 
-    wire       start_in  = uio[5];
-    wire [1:0] budget_in = uio[7:6];
+    wire       start_in  = uio_in[5];
+    wire [1:0] budget_in = uio_in[7:6];
 
 
     // ================================================================
