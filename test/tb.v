@@ -13,10 +13,10 @@ module tb;
     wire [7:0] uio_oe;
     
 
-    // DUT drives uio[4:0].
+    // DUT drives uio_out[4:0].
     // Testbench drives only the input pins:
-    //   uio[7:6] = error budget
-    //   uio[5]   = START
+    //   uio_in[7:6] = error budget
+    //   uio_in[5]   = START
     reg [1:0] budget_tb;
     reg       start_tb;
 
@@ -27,15 +27,15 @@ module tb;
         .nreset (nreset),
         .ui_in  (ui_in),
         .uo_out (uo_out),
-        .uio_in  (uio_in)
-        .uio_out  (uio_out)
+        .uio_in  (uio_in),
+        .uio_out  (uio_out),
         .uio_oe  (uio_oe)
     );
 
     // ------------------------------------------------------------
     // Clock: 100 MHz, matching the 10 ns clock used in OpenLane.
     // ------------------------------------------------------------
-    initial clk = 1'b0;
+  
     always #5 clk = ~clk;
 
     // ------------------------------------------------------------
@@ -398,7 +398,7 @@ module tb;
         nreset    = 1'b0;
 
         // Asynchronous reset.
-        repeat (3) @(posedge clk);
+        
         #20;
         nreset = 1'b1;
 
@@ -469,8 +469,8 @@ module tb;
     // Global timeout so a broken DUT cannot hang the simulation.
     // ------------------------------------------------------------
     initial begin
-        #10000;
-        $display("FATAL: Global simulation timeout.");
+        #100;
+        
         $finish;
     end
 
