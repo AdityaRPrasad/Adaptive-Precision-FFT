@@ -404,7 +404,7 @@ module tb;
 
         #1;
 
-        if (uio_oe !== 8'b00011111)
+        if (uio_oe !== 8'b00011111) begin
             $display("ERROR: Incorrect UIO output-enable: %08b", uio_oe);
             $fatal(1);
         end
@@ -469,7 +469,7 @@ module tb;
     // Global timeout so a broken DUT cannot hang the simulation.
     // ------------------------------------------------------------
     initial begin
-        #100;
+        #1000;
         
         $finish;
     end
