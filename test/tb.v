@@ -410,8 +410,8 @@ module tb;
         end
         else begin
             $display("PASS : UIO output-enable = %08b", uio_oe);
+        end
 
-        repeat (2) @(posedge clk);
 
         // TEST 1:
         // Relaxed budget, low-magnitude operands.
