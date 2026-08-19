@@ -5,6 +5,7 @@ module tb;
 
     reg        clk;
     reg        nreset;
+    reg [7:0]  ui_in;
 
     wire [7:0] uo_out;
     reg [7:0]  uio_in;
@@ -19,6 +20,7 @@ module tb;
     reg [1:0] budget_tb;
     reg       start_tb;
 
+    assign uio_in = {budget_tb, start_tb, 5'b00000};
 
     adaptive_fft_butterfly dut (
         .clk    (clk),
@@ -132,7 +134,7 @@ module tb;
             if ((abs_i(xi_i) & 3) > error6)
                 error6 = abs_i(xi_i) & 3;
             if ((abs_i(yr_i) & 3) > error6)
-                error6 = abs_i(yi_i) & 3;
+                error6 = abs_i(yr_i) & 3;
             if ((abs_i(yi_i) & 3) > error6)
                 error6 = abs_i(yi_i) & 3;
 
@@ -372,7 +374,7 @@ module tb;
             while (cycles < 12) begin
                 @(posedge clk);
                 #1;
-                if (uio[3] === 1'b1)
+                if (uio_out[3] === 1'b1)
                     valid_count = valid_count + 1;
                 cycles = cycles + 1;
             end
@@ -389,6 +391,7 @@ module tb;
     // Main simulation
     // ------------------------------------------------------------
     initial begin
+        clk       = 1'b0;
         budget_tb = 2'd0;
         start_tb  = 1'b0;
         ui_in     = 8'h00;
@@ -396,8 +399,17 @@ module tb;
 
         // Asynchronous reset.
         repeat (3) @(posedge clk);
-        #2;
+        #20;
         nreset = 1'b1;
+
+        #1;
+
+        if (uio_oe !== 8'b00011111)
+            $display("ERROR: Incorrect UIO output-enable: %08b", uio_oe);
+            $fatal(1);
+        end
+        else begin
+            $display("PASS : UIO output-enable = %08b", uio_oe);
 
         repeat (2) @(posedge clk);
 
