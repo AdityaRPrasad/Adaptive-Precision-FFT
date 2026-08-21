@@ -10,7 +10,7 @@ TOPLEVEL_LANG ?= verilog
 SRC_DIR = $(PWD)/../src
 
 # RTL DUT source
-PROJECT_SOURCES = fft_DUT.v
+PROJECT_SOURCES = project.v fft_DUT.v
 
 ifneq ($(GATES),yes)
 
