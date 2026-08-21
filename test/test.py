@@ -3,7 +3,7 @@
 
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, RisingEdge
+from cocotb.triggers import ClockCycles, RisingEdge, ReadWrite
 
 
 def signed_to_byte(value):
@@ -160,10 +160,10 @@ async def test_project(dut):
     precision = status & 0b11
     escalation = (status >> 2) & 0b1
 
-    dut._log.info(
-        f"Status: precision={precision}, "
-        f"escalation={escalation}"
-    )
+   dut._log.info(
+    f"Status: precision={precision}, "
+    f"escalation={escalation}"
+   )
 
     assert precision == expected_precision, (
         f"Expected precision {expected_precision}, "
@@ -190,12 +190,14 @@ async def test_project(dut):
     actual_outputs.append(int(dut.uo_out.value))
 
     # Read the next three output bytes
+
+    await RisingEdge(dut.clk)
+    actual_outputs.append(int(dut.uo_out.value))
+
     for _ in range(3):
-
         await RisingEdge(dut.clk)
-
+        await ReadWrite()
         actual_outputs.append(int(dut.uo_out.value))
-
     # ============================================================
     # CHECK OUTPUTS
     # ============================================================
