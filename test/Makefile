@@ -42,6 +42,8 @@ VERILOG_SOURCES += $(PDK_ROOT)/sky130A/libs.ref/sky130_fd_sc_hd/verilog/sky130_f
 # This file is supplied by the GDS workflow
 VERILOG_SOURCES += $(PWD)/gate_level_netlist.v
 
+VERILOG_SOURCES += $(SRC_DIR)/fft_DUT.v
+
 endif
 
 # Allow Verilog include files from src/
