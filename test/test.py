@@ -3,20 +3,28 @@
 
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, RisingEdge, ReadOnly
+from cocotb.triggers import ClockCycles, RisingEdge
 
 
 def signed_to_byte(value):
-    """Convert a signed integer to an 8-bit two's-complement value."""
+    """
+    Convert a signed integer into an unsigned 8-bit
+    two's-complement value.
+    """
     return value & 0xFF
 
 
 @cocotb.test()
 async def test_project(dut):
+
     dut._log.info("Start")
 
-    # Clock: 10 us period
-    clock = Clock(dut.clk, 10, unit="us")
+    # ============================================================
+    # CLOCK
+    # ============================================================
+
+    # 10 ns clock period
+    clock = Clock(dut.clk, 10, unit="ns")
     cocotb.start_soon(clock.start())
 
     # ============================================================
@@ -34,24 +42,16 @@ async def test_project(dut):
 
     dut.rst_n.value = 1
 
+    # Allow reset to propagate
     await ClockCycles(dut.clk, 2)
 
     # ============================================================
-    # TEST VALUES
-    #
-    # X = (8, -4)
-    # Y = (8, -4)
-    # budget = 2
-    #
-    # Expected from your simulation log:
-    # precision = 0
-    # escalation = 0
-    # Z0 = (8, -20)
-    # Z1 = (8, 12)
+    # TEST INPUT VALUES
     # ============================================================
 
     x_re = 8
     x_im = -4
+
     y_re = 8
     y_im = -4
 
@@ -61,10 +61,10 @@ async def test_project(dut):
     expected_escalation = 0
 
     expected_outputs = [
-        signed_to_byte(8),     # Z0_re
-        signed_to_byte(-20),   # Z0_im
-        signed_to_byte(8),     # Z1_re
-        signed_to_byte(12)     # Z1_im
+        signed_to_byte(8),      # Z0_re
+        signed_to_byte(-20),    # Z0_im
+        signed_to_byte(8),      # Z1_re
+        signed_to_byte(12)      # Z1_im
     ]
 
     dut._log.info(
@@ -74,64 +74,56 @@ async def test_project(dut):
     )
 
     # ============================================================
-    # SET ERROR BUDGET
+    # INPUT ENCODING
     #
     # uio_in[7:6] = budget
+    # uio_in[5]   = START
     # ============================================================
 
     base_uio = budget << 6
 
-    
+    # ============================================================
+    # SEND X_re AND PULSE START
+    #
+    # The DUT captures X_re when START is detected.
+    # ============================================================
+
     dut._log.info("Pulse START")
+
     dut.ui_in.value = signed_to_byte(x_re)
     dut.uio_in.value = base_uio | (1 << 5)
 
     await RisingEdge(dut.clk)
 
     # ============================================================
-    # PULSE START
-    #
-    # START = uio_in[5]
+    # REMOVE START
+    # SEND X_im
     # ============================================================
 
-    dut._log.info("Pulse START")
-    
-    dut.ui_in.value = signed_to_byte(x_im)
     dut.uio_in.value = base_uio
+    dut.ui_in.value = signed_to_byte(x_im)
 
     await RisingEdge(dut.clk)
+
+    # ============================================================
+    # SEND Y_re
+    # ============================================================
 
     dut.ui_in.value = signed_to_byte(y_re)
 
     await RisingEdge(dut.clk)
 
+    # ============================================================
+    # SEND Y_im
+    # ============================================================
+
     dut.ui_in.value = signed_to_byte(y_im)
 
     await RisingEdge(dut.clk)
 
+    # Clear input bus after all four bytes are sent
     dut.ui_in.value = 0
-    # ============================================================
-    # SEND FOUR INPUT BYTES
-    #
-    # byte 0 = X_re
-    # byte 1 = X_im
-    # byte 2 = Y_re
-    # byte 3 = Y_im
-    # ============================================================
-
-    input_bytes = [
-        signed_to_byte(x_re),
-        signed_to_byte(x_im),
-        signed_to_byte(y_re),
-        signed_to_byte(y_im)
-    ]
-
-    for value in input_bytes:
-        dut.ui_in.value = value
-        await RisingEdge(dut.clk)
-
-    # Clear input after sending all four bytes
-    dut.ui_in.value = 0
+    dut.uio_in.value = base_uio
 
     # ============================================================
     # WAIT FOR VALID
@@ -144,23 +136,25 @@ async def test_project(dut):
     valid = 0
 
     for _ in range(100):
+
         await RisingEdge(dut.clk)
-        
+
         status = int(dut.uio_out.value)
+
         valid = (status >> 3) & 0x1
 
-        if valid:
+        if valid == 1:
             break
 
     assert valid == 1, "Timeout: VALID was never asserted"
 
     # ============================================================
-    # CHECK STATUS BITS
+    # STATUS CHECK
     #
     # uio_out[2]   = escalation
     # uio_out[1:0] = precision
     # ============================================================
-    
+
     status = int(dut.uio_out.value)
 
     precision = status & 0b11
@@ -182,7 +176,7 @@ async def test_project(dut):
     )
 
     # ============================================================
-    # READ FOUR SUCCESSIVE OUTPUT BYTES
+    # READ OUTPUT BYTES
     #
     # byte 0 = Z0_re
     # byte 1 = Z0_im
@@ -192,27 +186,36 @@ async def test_project(dut):
 
     actual_outputs = []
 
-    # Read the first output immediately when VALID is detected
+    # Read the first output when VALID is detected
     actual_outputs.append(int(dut.uo_out.value))
 
-    # Read the remaining three outputs
+    # Read the next three output bytes
     for _ in range(3):
+
         await RisingEdge(dut.clk)
+
         actual_outputs.append(int(dut.uo_out.value))
 
     # ============================================================
     # CHECK OUTPUTS
     # ============================================================
 
-    names = ["Z0_re", "Z0_im", "Z1_re", "Z1_im"]
+    names = [
+        "Z0_re",
+        "Z0_im",
+        "Z1_re",
+        "Z1_im"
+    ]
 
     for name, actual, expected in zip(
         names,
         actual_outputs,
         expected_outputs
     ):
+
         dut._log.info(
-            f"{name}: expected=0x{expected:02X}, "
+            f"{name}: "
+            f"expected=0x{expected:02X}, "
             f"actual=0x{actual:02X}"
         )
 
