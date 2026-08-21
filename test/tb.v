@@ -5,6 +5,8 @@ module tb;
 
     reg        clk;
     reg        nreset;
+    reg        ena;
+    
     reg [7:0]  ui_in;
 
     wire [7:0] uo_out;
@@ -27,6 +29,7 @@ module tb;
         .rst_n  (nreset),
         .ui_in  (ui_in),
         .uo_out (uo_out),
+        .ena  (ena),
         .uio_in  (uio_in),
         .uio_out  (uio_out),
         .uio_oe  (uio_oe)
