@@ -80,7 +80,11 @@ async def test_project(dut):
     # ============================================================
 
     base_uio = budget << 6
-    dut.uio_in.value = base_uio
+
+    
+    dut._log.info("Pulse START")
+    dut.ui_in.value = signed_to_byte(x_re)
+    dut.uio_in.value = base_uio | (1 << 5)
 
     await RisingEdge(dut.clk)
 
@@ -91,13 +95,21 @@ async def test_project(dut):
     # ============================================================
 
     dut._log.info("Pulse START")
-
-    dut.uio_in.value = base_uio | (1 << 5)
+    
+    dut.ui_in.value = signed_to_byte(x_im)
+    dut.uio_in.value = base_uio
 
     await RisingEdge(dut.clk)
 
-    dut.uio_in.value = base_uio
+    dut.ui_in.value = signed_to_byte(y_re)
 
+    await RisingEdge(dut.clk)
+
+    dut.ui_in.value = signed_to_byte(y_im)
+
+    await RisingEdge(dut.clk)
+
+    dut.ui_in.value = 0
     # ============================================================
     # SEND FOUR INPUT BYTES
     #
