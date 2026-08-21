@@ -133,11 +133,10 @@ async def test_project(dut):
 
     for _ in range(100):
         await RisingEdge(dut.clk)
-        await ReadOnly()
         
         valid = (int(dut.uio_out.value) >> 3) & 0x1
 
-        if valid==1:
+        if valid:
             break
 
     assert valid == 1, "Timeout: VALID was never asserted"
@@ -148,7 +147,6 @@ async def test_project(dut):
     # uio_out[2]   = escalation
     # uio_out[1:0] = precision
     # ============================================================
-    await ReadOnly()
     
     status = int(dut.uio_out.value)
 
@@ -182,13 +180,11 @@ async def test_project(dut):
     actual_outputs = []
 
     # Read the first output immediately when VALID is detected
-    await ReadOnly()
     actual_outputs.append(int(dut.uo_out.value))
 
     # Read the remaining three outputs
     for _ in range(3):
         await RisingEdge(dut.clk)
-        await ReadOnly()
         actual_outputs.append(int(dut.uo_out.value))
 
     # ============================================================
