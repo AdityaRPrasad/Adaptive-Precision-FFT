@@ -177,15 +177,15 @@ async def test_project(dut):
     # Then advance one clock for each remaining output byte.
     # ============================================================
 
-    actual_outputs = [first_output]
+    actual_outputs = []
 
     # Byte 0 = Z0_re
-   
+    await ReadOnly()
     actual_outputs.append(int(dut.uo_out.value))
 
     for _ in range(3):
         await RisingEdge(dut.clk)
-        
+        await ReadOnly()
         actual_outputs.append(int(dut.uo_out.value))
 
     # ============================================================
