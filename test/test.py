@@ -3,28 +3,23 @@
 
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, RisingEdge, ReadWrite
+from cocotb.triggers import ClockCycles, RisingEdge
 
 
 def signed_to_byte(value):
-    """
-    Convert a signed integer into an unsigned 8-bit
-    two's-complement value.
-    """
+    """Convert a signed integer to an 8-bit two's-complement value."""
     return value & 0xFF
 
 
 @cocotb.test()
 async def test_project(dut):
-
     dut._log.info("Start")
 
     # ============================================================
     # CLOCK
     # ============================================================
 
-    # 10 ns clock period
-    clock = Clock(dut.clk, 10, unit="ns")
+    clock = Clock(dut.clk, 10, unit="us")
     cocotb.start_soon(clock.start())
 
     # ============================================================
@@ -42,16 +37,14 @@ async def test_project(dut):
 
     dut.rst_n.value = 1
 
-    # Allow reset to propagate
     await ClockCycles(dut.clk, 2)
 
     # ============================================================
-    # TEST INPUT VALUES
+    # TEST 1 INPUT VALUES
     # ============================================================
 
     x_re = 8
     x_im = -4
-
     y_re = 8
     y_im = -4
 
@@ -61,10 +54,10 @@ async def test_project(dut):
     expected_escalation = 0
 
     expected_outputs = [
-        signed_to_byte(8),      # Z0_re
-        signed_to_byte(-20),    # Z0_im
-        signed_to_byte(8),      # Z1_re
-        signed_to_byte(12)      # Z1_im
+        signed_to_byte(8),     # Z0_re
+        signed_to_byte(-20),   # Z0_im
+        signed_to_byte(8),     # Z1_re
+        signed_to_byte(12)     # Z1_im
     ]
 
     dut._log.info(
@@ -74,18 +67,18 @@ async def test_project(dut):
     )
 
     # ============================================================
-    # INPUT ENCODING
+    # PREPARE UIO INPUT
     #
-    # uio_in[7:6] = budget
+    # uio_in[7:6] = error budget
     # uio_in[5]   = START
     # ============================================================
 
     base_uio = budget << 6
 
     # ============================================================
-    # SEND X_re AND PULSE START
+    # SEND X_re AND ASSERT START
     #
-    # The DUT captures X_re when START is detected.
+    # The DUT samples X_re when START is asserted in S_IDLE.
     # ============================================================
 
     dut._log.info("Pulse START")
@@ -96,12 +89,11 @@ async def test_project(dut):
     await RisingEdge(dut.clk)
 
     # ============================================================
-    # REMOVE START
-    # SEND X_im
+    # SEND X_im AND CLEAR START
     # ============================================================
 
-    dut.uio_in.value = base_uio
     dut.ui_in.value = signed_to_byte(x_im)
+    dut.uio_in.value = base_uio
 
     await RisingEdge(dut.clk)
 
@@ -121,7 +113,7 @@ async def test_project(dut):
 
     await RisingEdge(dut.clk)
 
-    # Clear input bus after all four bytes are sent
+    # Clear input after all operands are captured.
     dut.ui_in.value = 0
     dut.uio_in.value = base_uio
 
@@ -136,23 +128,21 @@ async def test_project(dut):
     valid = 0
 
     for _ in range(100):
-
         await RisingEdge(dut.clk)
 
         status = int(dut.uio_out.value)
-
         valid = (status >> 3) & 0x1
 
-        if valid == 1:
+        if valid:
             break
 
     assert valid == 1, "Timeout: VALID was never asserted"
 
     # ============================================================
-    # STATUS CHECK
+    # CHECK STATUS
     #
-    # uio_out[2]   = escalation
     # uio_out[1:0] = precision
+    # uio_out[2]   = escalation
     # ============================================================
 
     status = int(dut.uio_out.value)
@@ -160,10 +150,10 @@ async def test_project(dut):
     precision = status & 0b11
     escalation = (status >> 2) & 0b1
 
-   dut._log.info(
-    f"Status: precision={precision}, "
-    f"escalation={escalation}"
-   )
+    dut._log.info(
+        f"Status: precision={precision}, "
+        f"escalation={escalation}"
+    )
 
     assert precision == expected_precision, (
         f"Expected precision {expected_precision}, "
@@ -176,28 +166,32 @@ async def test_project(dut):
     )
 
     # ============================================================
-    # READ OUTPUT BYTES
+    # READ OUTPUTS
     #
-    # byte 0 = Z0_re
-    # byte 1 = Z0_im
-    # byte 2 = Z1_re
-    # byte 3 = Z1_im
+    # IMPORTANT:
+    # VALID corresponds to the first output byte being available.
+    #
+    # Read byte 0 immediately.
+    # Then advance one clock for each remaining output byte.
     # ============================================================
 
     actual_outputs = []
 
-    # Read the first output when VALID is detected
+    # Byte 0 = Z0_re
     actual_outputs.append(int(dut.uo_out.value))
 
-    # Read the next three output bytes
-
+    # Byte 1 = Z0_im
     await RisingEdge(dut.clk)
     actual_outputs.append(int(dut.uo_out.value))
 
-    for _ in range(3):
-        await RisingEdge(dut.clk)
-        await ReadWrite()
-        actual_outputs.append(int(dut.uo_out.value))
+    # Byte 2 = Z1_re
+    await RisingEdge(dut.clk)
+    actual_outputs.append(int(dut.uo_out.value))
+
+    # Byte 3 = Z1_im
+    await RisingEdge(dut.clk)
+    actual_outputs.append(int(dut.uo_out.value))
+
     # ============================================================
     # CHECK OUTPUTS
     # ============================================================
@@ -214,16 +208,15 @@ async def test_project(dut):
         actual_outputs,
         expected_outputs
     ):
-
         dut._log.info(
-            f"{name}: "
-            f"expected=0x{expected:02X}, "
+            f"{name}: expected=0x{expected:02X}, "
             f"actual=0x{actual:02X}"
         )
 
         assert actual == expected, (
             f"{name} failed: "
-            f"expected {expected}, got {actual}"
+            f"expected 0x{expected:02X}, "
+            f"got 0x{actual:02X}"
         )
 
     dut._log.info("FFT TEST PASSED")
