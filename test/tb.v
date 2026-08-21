@@ -396,6 +396,7 @@ module tb;
     initial begin
         clk       = 1'b0;
         budget_tb = 2'd0;
+        ena       = 1'b1;
         start_tb  = 1'b0;
         ui_in     = 8'h00;
         nreset    = 1'b0;
