@@ -3,7 +3,7 @@
 
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, RisingEdge, ReadWrite, Timer
+from cocotb.triggers import ClockCycles, RisingEdge, ReadWrite, ReadOnly
 
 
 def signed_to_byte(value):
