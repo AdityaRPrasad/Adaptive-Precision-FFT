@@ -594,8 +594,10 @@ module adaptive_fft_butterfly (
 
                     precision <= selected_precision;
 
-                    escalated <=
-                        (selected_precision == 2'd2);
+                    escalated <= (selected_precision == 2'd2);
+
+                    uio_out_reg[2]   <= (selected_precision == 2'd2);
+                    uio_out_reg[1:0] <= selected_precision;
 
                     state <= S_M0;
 
@@ -749,10 +751,6 @@ module adaptive_fft_butterfly (
                         $signed(rot_im);
 
                     uio_out_reg[3] <= 1'b1;
-
-                    uio_out_reg[2] <= escalated;
-
-                    uio_out_reg[1:0] <= precision;
 
                     // Rotate to the next internal twiddle.
                     twiddle_index <=
