@@ -134,7 +134,8 @@ async def test_project(dut):
     for _ in range(100):
         await RisingEdge(dut.clk)
         
-        valid = (int(dut.uio_out.value) >> 3) & 0x1
+        status = int(dut.uio_out.value)
+        valid = (status >> 3) & 0x1
 
         if valid:
             break
