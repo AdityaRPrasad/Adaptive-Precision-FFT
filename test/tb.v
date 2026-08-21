@@ -22,7 +22,7 @@ module tb;
 
     assign uio_in = {budget_tb, start_tb, 5'b00000};
 
-    adaptive_fft_butterfly dut (
+    tt_um_adityarprasad_fft dut (
         .clk    (clk),
         .nreset (nreset),
         .ui_in  (ui_in),
