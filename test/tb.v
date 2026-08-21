@@ -24,7 +24,7 @@ module tb;
 
     tt_um_adityarprasad_fft dut (
         .clk    (clk),
-        .nreset (nreset),
+        .rst_n  (nreset),
         .ui_in  (ui_in),
         .uo_out (uo_out),
         .uio_in  (uio_in),
