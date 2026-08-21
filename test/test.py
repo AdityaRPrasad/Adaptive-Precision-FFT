@@ -3,7 +3,7 @@
 
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, RisingEdge
+from cocotb.triggers import ClockCycles, RisingEdge, ReadWrite, Timer
 
 
 def signed_to_byte(value):
@@ -182,14 +182,17 @@ async def test_project(dut):
 
     # Byte 1 = Z0_im
     await RisingEdge(dut.clk)
+    await Timer(1, unit="ns")
     actual_outputs.append(int(dut.uo_out.value))
 
     # Byte 2 = Z1_re
     await RisingEdge(dut.clk)
+    await Timer(1, unit="ns")
     actual_outputs.append(int(dut.uo_out.value))
 
     # Byte 3 = Z1_im
     await RisingEdge(dut.clk)
+    await Timer(1, unit="ns")
     actual_outputs.append(int(dut.uo_out.value))
 
     # ============================================================
