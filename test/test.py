@@ -178,22 +178,13 @@ async def test_project(dut):
     actual_outputs = []
 
     # Byte 0 = Z0_re
+    await ReadOnly()
     actual_outputs.append(int(dut.uo_out.value))
 
-    # Byte 1 = Z0_im
-    await RisingEdge(dut.clk)
-    await Timer(1, unit="ns")
-    actual_outputs.append(int(dut.uo_out.value))
-
-    # Byte 2 = Z1_re
-    await RisingEdge(dut.clk)
-    await Timer(1, unit="ns")
-    actual_outputs.append(int(dut.uo_out.value))
-
-    # Byte 3 = Z1_im
-    await RisingEdge(dut.clk)
-    await Timer(1, unit="ns")
-    actual_outputs.append(int(dut.uo_out.value))
+    for _ in range(3):
+        await RisingEdge(dut.clk)
+        await ReadOnly()
+        actual_outputs.append(int(dut.uo_out.value))
 
     # ============================================================
     # CHECK OUTPUTS
