@@ -4,7 +4,7 @@
 module tb;
 
     reg        clk;
-    reg        nreset;
+    reg        rst_n;
     reg        ena;
     
     reg [7:0]  ui_in;
@@ -26,7 +26,7 @@ module tb;
 
     tt_um_adityarprasad_fft dut (
         .clk    (clk),
-        .rst_n  (nreset),
+        .rst_n  (rst_n),
         .ui_in  (ui_in),
         .uo_out (uo_out),
         .ena  (ena),
@@ -399,12 +399,12 @@ module tb;
         ena       = 1'b1;
         start_tb  = 1'b0;
         ui_in     = 8'h00;
-        nreset    = 1'b0;
+        rst_n    = 1'b0;
 
         // Asynchronous reset.
         
         #20;
-        nreset = 1'b1;
+        rst_n = 1'b1;
 
         #1;
 
