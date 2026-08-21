@@ -266,17 +266,15 @@ module adaptive_fft_butterfly (
                 // IDLE / START
                 // ----------------------------------------------------
                 S_IDLE: begin
-                    uio_out_reg[4]   <= 1'b0;
-                    uio_out_reg[2]   <= escalated;
-                    uio_out_reg[1:0] <= precision;
+                    uio_out_reg[4] <= 1'b0;
 
                     if (start_pulse) begin
                         // Capture X_re together with START.
-                        xr         <= $signed(ui_in);
+                        xr <= $signed(ui_in);
                         budget_reg <= budget_in;
 
                         uio_out_reg[4] <= 1'b1;
-                        state          <= S_XI;
+                        state <= S_XI;
                     end
                 end
 
@@ -360,7 +358,6 @@ module adaptive_fft_butterfly (
                     uio_out_reg[4]      <= 1'b0;
                     uio_out_reg[3]      <= 1'b1;
                     uio_out_reg[2]      <= escalated;
-                    uio_out_reg[1:0]    <= precision;
                     state               <= S_O1;
                 end
 
@@ -368,7 +365,6 @@ module adaptive_fft_butterfly (
                     out_reg             <= $signed(xi) + $signed(rot_im);
                     uio_out_reg[3]      <= 1'b1;
                     uio_out_reg[2]      <= escalated;
-                    uio_out_reg[1:0]    <= precision;
                     state               <= S_O2;
                 end
 
@@ -376,7 +372,6 @@ module adaptive_fft_butterfly (
                     out_reg             <= $signed(xr) - $signed(rot_re);
                     uio_out_reg[3]      <= 1'b1;
                     uio_out_reg[2]      <= escalated;
-                    uio_out_reg[1:0]    <= precision;
                     state               <= S_O3;
                 end
 
@@ -384,7 +379,6 @@ module adaptive_fft_butterfly (
                     out_reg             <= $signed(xi) - $signed(rot_im);
                     uio_out_reg[3]      <= 1'b1;
                     uio_out_reg[2]      <= escalated;
-                    uio_out_reg[1:0]    <= precision;
 
                     twiddle_index <= twiddle_index + 2'd1;
                     state         <= S_IDLE;
