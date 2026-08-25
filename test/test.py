@@ -126,16 +126,16 @@ async def test_project(dut):
     dut._log.info("Waiting for VALID")
 
     valid = 0
-    first_output = None
+    
     
     for _ in range(100):
         await RisingEdge(dut.clk)
+        await ReadOnly()
 
         status = int(dut.uio_out.value)
         valid = (status >> 3) & 0x1
 
         if valid:
-            first_output = int(dut.uo_out.value)
             break
 
     assert valid == 1, "Timeout: VALID was never asserted"
@@ -180,7 +180,7 @@ async def test_project(dut):
     actual_outputs = []
 
     # Byte 0 = Z0_re
-    await ReadOnly()
+   
     actual_outputs.append(int(dut.uo_out.value))
 
     for _ in range(3):
