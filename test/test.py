@@ -35,8 +35,9 @@ async def test_project(dut):
 
     dut.rst_n.value = 1
 
-    await ClockCycles(dut.clk, 2)
-
+    await ClockCycles(dut.clk, 5)
+    await Timer(2, unit="ns")
+    
     # ============================================================
     # TEST 1 INPUT VALUES
     # ============================================================
@@ -85,6 +86,7 @@ async def test_project(dut):
     dut.uio_in.value = base_uio | (1 << 5)
 
     await RisingEdge(dut.clk)
+    await Timer(2, unit="ns")
 
     # ============================================================
     # SEND X_im AND CLEAR START
@@ -94,6 +96,7 @@ async def test_project(dut):
     dut.uio_in.value = base_uio
 
     await RisingEdge(dut.clk)
+    await Timer(2, unit="ns")
 
     # ============================================================
     # SEND Y_re
@@ -102,6 +105,8 @@ async def test_project(dut):
     dut.ui_in.value = signed_to_byte(y_re)
 
     await RisingEdge(dut.clk)
+    await Timer(2, unit="ns")
+
 
     # ============================================================
     # SEND Y_im
@@ -110,6 +115,7 @@ async def test_project(dut):
     dut.ui_in.value = signed_to_byte(y_im)
 
     await RisingEdge(dut.clk)
+    await Timer(2, unit="ns")
 
     # Clear input after all operands are captured.
     dut.ui_in.value = 0
@@ -125,12 +131,10 @@ async def test_project(dut):
 
     valid = 0
     
-    
     for _ in range(100):
         await RisingEdge(dut.clk)
 
         await Timer(2, unit="ns")
-        await ReadOnly()
 
         valid_bit = dut.uio_out.value[3]
 
