@@ -3,7 +3,7 @@
 
 import cocotb
 
-from cocotb.triggers import ClockCycles, RisingEdge, ReadWrite, ReadOnly
+from cocotb.triggers import ClockCycles, RisingEdge, Timer, ReadOnly
 
 
 def signed_to_byte(value):
@@ -128,11 +128,21 @@ async def test_project(dut):
     
     for _ in range(100):
         await RisingEdge(dut.clk)
+
+        await Timer(2, unit="ns")
         await ReadOnly()
 
-        status = int(dut.uio_out.value)
+        status = dut.uio_out.value
+ 
+        if not status_value.is_resolvable:
+            dut._log.debug(
+                f"uio_out not yet resolved: {status_value}"
+            )
+            continue
+            
+        status = int(status_value)
         valid = (status >> 3) & 0x1
-
+        
         if valid:
             break
 
@@ -145,7 +155,16 @@ async def test_project(dut):
     # uio_out[2]   = escalation
     # ============================================================
 
-    status = int(dut.uio_out.value)
+    await ReadOnly()
+
+    status_value = dut.uio_out.value
+
+    assert status_value.is_resolvable, (
+        f"uio_out contains unresolved values after VALID: "
+        f"{status_value}"
+    )
+
+    status = int(status_value)
 
     precision = status & 0b11
     escalation = (status >> 2) & 0b1
@@ -179,7 +198,34 @@ async def test_project(dut):
 
     # Byte 0 = Z0_re
    
-    actual_outputs.append(int(dut.uo_out.value))
+    await Timer(2, unit="ns")
+    await ReadOnly()
+
+    output_value = dut.uo_out.value
+
+    assert output_value.is_resolvable, (
+        f"Output byte 0 contains unresolved values: {output_value}"
+    )
+
+    actual_outputs.append(int(output_value))
+
+    for byte_index in range(1, 4):
+
+        await RisingEdge(dut.clk)
+
+    # Account for UNIT_DELAY=#1 in gate-level simulation.
+        await Timer(2, unit="ns")
+
+        await ReadOnly()
+
+        output_value = dut.uo_out.value
+
+        assert output_value.is_resolvable, (
+            f"Output byte {byte_index} contains unresolved values: "
+            f"{output_value}"
+        )
+
+        actual_outputs.append(int(output_value))
 
     for _ in range(3):
         await RisingEdge(dut.clk)
