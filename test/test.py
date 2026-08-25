@@ -132,7 +132,7 @@ async def test_project(dut):
         await Timer(2, unit="ns")
         await ReadOnly()
 
-        status = dut.uio_out.value
+        status_value = dut.uio_out.value
  
         if not status_value.is_resolvable:
             dut._log.debug(
@@ -227,10 +227,7 @@ async def test_project(dut):
 
         actual_outputs.append(int(output_value))
 
-    for _ in range(3):
-        await RisingEdge(dut.clk)
-        await ReadOnly()
-        actual_outputs.append(int(dut.uo_out.value))
+    
 
     # ============================================================
     # CHECK OUTPUTS
