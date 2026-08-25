@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import cocotb
-from cocotb.clock import Clock
+
 from cocotb.triggers import ClockCycles, RisingEdge, ReadWrite, ReadOnly
 
 
@@ -19,8 +19,6 @@ async def test_project(dut):
     # CLOCK
     # ============================================================
 
-    clock = Clock(dut.clk, 10, unit="us")
-    cocotb.start_soon(clock.start())
 
     # ============================================================
     # RESET
