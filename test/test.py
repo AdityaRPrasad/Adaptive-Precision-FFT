@@ -165,7 +165,7 @@ async def test_project(dut):
         f"Precision bit 1 is unresolved: {precision_1_bit}"
     )
 
-    assert escalation_bit.is_resolvable,, (
+    assert escalation_bit.is_resolvable, (
         f"Escalation bit is unresolved: {escalation_bit}"
     )
 
