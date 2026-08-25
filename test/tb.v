@@ -1,33 +1,36 @@
 `timescale 1ns/1ps
 `default_nettype none
 
-always #5 clk = ~clk;
-
 module tb;
+
+    // ============================================================
+    // TOP-LEVEL TESTBENCH SIGNALS
+    // ============================================================
 
     reg        clk;
     reg        rst_n;
     reg        ena;
 
     reg [7:0]  ui_in;
-
     wire [7:0] uo_out;
+
+    // Cocotb drives uio_in directly.
     reg [7:0]  uio_in;
+
     wire [7:0] uio_out;
     wire [7:0] uio_oe;
 
 
     // ============================================================
-    // UIO INPUT CONTROL
+    // LEGACY DIRECTED-TEST CONTROL SIGNALS
     //
-    // uio_in[7:6] = error budget
-    // uio_in[5]   = START
+    // These are retained only because the helper tasks below still
+    // reference them. The tasks are NOT executed by the main
+    // simulation block during Cocotb testing.
     // ============================================================
 
     reg [1:0] budget_tb;
     reg       start_tb;
-
-    assign uio_in = {budget_tb, start_tb, 5'b00000};
 
 
     // ============================================================
@@ -48,13 +51,23 @@ module tb;
 
     // ============================================================
     // CLOCK
-    // 100 MHz
+    //
+    // tb.v is the ONLY clock generator.
+    //
+    // Period = 10 ns
     // ============================================================
 
+    initial begin
+        clk = 1'b0;
+    end
+
+    always #5 clk = ~clk;
 
 
     // ============================================================
     // HELPER FUNCTIONS
+    //
+    // Retained from the original directed Verilog testbench.
     // ============================================================
 
     function integer abs_i;
@@ -188,9 +201,7 @@ module tb;
             case (budget_i)
 
                 0: limit_i = 2;
-
                 1: limit_i = 6;
-
                 default: limit_i = 12;
 
             endcase
@@ -210,7 +221,6 @@ module tb;
                     expected_precision = 1;
 
             end
-
             else begin
 
                 expected_precision = 0;
@@ -224,6 +234,10 @@ module tb;
 
     // ============================================================
     // RUN ONE TRANSACTION
+    //
+    // IMPORTANT:
+    // This task is retained from the original Verilog testbench,
+    // but it is NOT called during Cocotb testing.
     // ============================================================
 
     task automatic run_transaction;
@@ -265,10 +279,6 @@ module tb;
 
         begin
 
-            // ====================================================
-            // CALCULATE EXPECTED PRECISION
-            // ====================================================
-
             p_exp = expected_precision(
                 xr_i,
                 xi_i,
@@ -277,10 +287,6 @@ module tb;
                 budget_i
             );
 
-
-            // ====================================================
-            // CALCULATE EXPECTED OUTPUTS
-            // ====================================================
 
             qr_i = quantize_model(yr_i, p_exp);
             qi_i = quantize_model(yi_i, p_exp);
@@ -313,10 +319,6 @@ module tb;
             expected_bytes[3] = z1i_i & 8'hFF;
 
 
-            // ====================================================
-            // DISPLAY TEST INFORMATION
-            // ====================================================
-
             $display("");
             $display("------------------------------------------------------------");
             $display("TEST %0d", tx_id);
@@ -346,10 +348,7 @@ module tb;
             );
 
 
-            // ====================================================
-            // SET BUDGET
-            // ====================================================
-
+            // Legacy task behavior.
             budget_tb = budget_i[1:0];
 
             start_tb = 1'b0;
@@ -357,12 +356,6 @@ module tb;
 
             @(negedge clk);
 
-
-            // ====================================================
-            // BYTE 0 = X_re
-            //
-            // START is asserted during this clock.
-            // ====================================================
 
             ui_in = xr_i & 8'hFF;
             start_tb = 1'b1;
@@ -375,10 +368,6 @@ module tb;
             start_tb = 1'b0;
 
 
-            // ====================================================
-            // BYTE 1 = X_im
-            // ====================================================
-
             ui_in = xi_i & 8'hFF;
 
             @(posedge clk);
@@ -386,10 +375,6 @@ module tb;
 
             @(negedge clk);
 
-
-            // ====================================================
-            // BYTE 2 = Y_re
-            // ====================================================
 
             ui_in = yr_i & 8'hFF;
 
@@ -399,10 +384,6 @@ module tb;
             @(negedge clk);
 
 
-            // ====================================================
-            // BYTE 3 = Y_im
-            // ====================================================
-
             ui_in = yi_i & 8'hFF;
 
             @(posedge clk);
@@ -411,49 +392,28 @@ module tb;
             @(negedge clk);
 
 
-            // ====================================================
-            // CLEAR INPUT
-            // ====================================================
-
             ui_in = 8'h00;
 
 
-            // ====================================================
-            // WAIT FOR VALID
-            // ====================================================
-
             observed_count = 0;
             timeout_count = 0;
-
-            precision_seen = -1;
-            escalation_seen = -1;
-
             failures = 0;
 
 
             while (
                 (observed_count < 4) &&
-                (timeout_count < 40)
+                (timeout_count < 50)
             ) begin
 
                 @(posedge clk);
                 #1;
 
-
                 if (uio_out[3] === 1'b1) begin
-
-
-                    // ============================================
-                    // CHECK STATUS ON FIRST VALID BYTE
-                    // ============================================
 
                     if (observed_count == 0) begin
 
-                        precision_seen =
-                            uio_out[1:0];
-
-                        escalation_seen =
-                            uio_out[2];
+                        precision_seen = uio_out[1:0];
+                        escalation_seen = uio_out[2];
 
 
                         if (
@@ -488,10 +448,6 @@ module tb;
                     end
 
 
-                    // ============================================
-                    // CHECK CURRENT OUTPUT BYTE
-                    // ============================================
-
                     if (
                         uo_out !==
                         expected_bytes[observed_count]
@@ -507,7 +463,6 @@ module tb;
                         failures = failures + 1;
 
                     end
-
                     else begin
 
                         $display(
@@ -531,10 +486,6 @@ module tb;
             end
 
 
-            // ====================================================
-            // CHECK VALID TIMEOUT
-            // ====================================================
-
             if (observed_count != 4) begin
 
                 $display(
@@ -546,10 +497,6 @@ module tb;
 
             end
 
-
-            // ====================================================
-            // WAIT FOR BUSY TO GO LOW
-            // ====================================================
 
             timeout_count = 0;
 
@@ -579,10 +526,6 @@ module tb;
             end
 
 
-            // ====================================================
-            // FINAL RESULT
-            // ====================================================
-
             if (failures == 0) begin
 
                 $display(
@@ -591,7 +534,6 @@ module tb;
                 );
 
             end
-
             else begin
 
                 $display(
@@ -609,6 +551,9 @@ module tb;
 
     // ============================================================
     // START HOLD TEST
+    //
+    // Retained from the original Verilog testbench, but NOT called
+    // during Cocotb testing.
     // ============================================================
 
     task automatic test_start_hold;
@@ -633,7 +578,6 @@ module tb;
             @(negedge clk);
 
 
-            // START + X_re
             ui_in = 8'd0;
             start_tb = 1'b1;
 
@@ -641,7 +585,6 @@ module tb;
             #1;
 
 
-            // X_im
             @(negedge clk);
             ui_in = 8'd0;
 
@@ -649,7 +592,6 @@ module tb;
             #1;
 
 
-            // Y_re
             @(negedge clk);
             ui_in = 8'd0;
 
@@ -657,7 +599,6 @@ module tb;
             #1;
 
 
-            // Y_im
             @(negedge clk);
             ui_in = 8'd0;
 
@@ -665,8 +606,6 @@ module tb;
             #1;
 
 
-            // Keep START high.
-            // It must not start another transaction.
             @(negedge clk);
 
             repeat (3) begin
@@ -706,7 +645,6 @@ module tb;
                 );
 
             end
-
             else begin
 
                 $display(
@@ -722,166 +660,31 @@ module tb;
 
 
     // ============================================================
-    // MAIN SIMULATION
+    // MAIN SIMULATION INITIALIZATION
+    //
+    // Cocotb owns:
+    //   - reset sequencing
+    //   - ui_in stimulus
+    //   - uio_in stimulus
+    //   - START
+    //   - output checking
+    //
+    // Therefore:
+    //   - DO NOT call run_transaction()
+    //   - DO NOT call test_start_hold()
+    //   - DO NOT call $finish
     // ============================================================
 
     initial begin
 
-        clk       = 1'b0;
         rst_n     = 1'b0;
         ena       = 1'b1;
 
+        ui_in     = 8'h00;
+        uio_in    = 8'h00;
+
         budget_tb = 2'd0;
         start_tb  = 1'b0;
-
-        ui_in     = 8'h00;
-
-
-        // ========================================================
-        // RESET
-        // ========================================================
-
-
-
-        // ========================================================
-        // CHECK UIO OUTPUT ENABLE
-        // ========================================================
-
-        if (uio_oe !== 8'b00011111) begin
-
-            $display(
-                "ERROR: Incorrect UIO output-enable: %08b",
-                uio_oe
-            );
-
-            $fatal(1);
-
-        end
-
-        else begin
-
-            $display(
-                "PASS : UIO output-enable = %08b",
-                uio_oe
-            );
-
-        end
-
-
-        // ========================================================
-        // TEST 1
-        //
-        // Expected precision = 0
-        // ========================================================
-
-        run_transaction(
-            1,
-            8,
-            -4,
-            8,
-            -4,
-            2,
-            0
-        );
-
-
-        // ========================================================
-        // TEST 2
-        //
-        // Expected precision = 1
-        // ========================================================
-
-        run_transaction(
-            2,
-            0,
-            0,
-            5,
-            0,
-            0,
-            1
-        );
-
-
-        // ========================================================
-        // TEST 3
-        //
-        // Expected precision = 2
-        // ========================================================
-
-        run_transaction(
-            3,
-            0,
-            0,
-            7,
-            0,
-            0,
-            2
-        );
-
-
-        // ========================================================
-        // TEST 4
-        // ========================================================
-
-        run_transaction(
-            4,
-            20,
-            -12,
-            -5,
-            7,
-            1,
-            3
-        );
-
-
-        // ========================================================
-        // TEST 5
-        // ========================================================
-
-        run_transaction(
-            5,
-            100,
-            -3,
-            7,
-            -9,
-            0,
-            0
-        );
-
-
-        // ========================================================
-        // TEST 6
-        // ========================================================
-
-        test_start_hold();
-
-
-        $display("");
-        $display("============================================================");
-        $display("ALL DIRECTED TESTS COMPLETED");
-        $display("============================================================");
-
-
-        #20;
-
-        $finish;
-
-    end
-
-
-    // ============================================================
-    // GLOBAL TIMEOUT
-    // ============================================================
-
-    initial begin
-
-        #2000;
-
-        $display(
-            "ERROR: Global simulation timeout"
-        );
-
-        $finish;
 
     end
 
