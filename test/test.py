@@ -155,7 +155,7 @@ async def test_project(dut):
     # uio_out[2]   = escalation
     # ============================================================
 
-    await ReadOnly()
+   
 
     status_value = dut.uio_out.value
 
