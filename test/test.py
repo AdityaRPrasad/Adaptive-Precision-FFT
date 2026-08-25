@@ -132,18 +132,14 @@ async def test_project(dut):
         await Timer(2, unit="ns")
         await ReadOnly()
 
-        status_value = dut.uio_out.value
- 
-        if not status_value.is_resolvable:
-            dut._log.debug(
-                f"uio_out not yet resolved: {status_value}"
-            )
+        valid_bit = dut.uio_out.value[3]
+
+        if not valid_bit.is_resolvable:
             continue
-            
-        status = int(status_value)
-        valid = (status >> 3) & 0x1
+
+        valid = int(valid_bit)
         
-        if valid:
+        if valid == 1:
             break
 
     assert valid == 1, "Timeout: VALID was never asserted"
@@ -155,19 +151,30 @@ async def test_project(dut):
     # uio_out[2]   = escalation
     # ============================================================
 
-   
+    status_bits = dut.uio_out.value
 
-    status_value = dut.uio_out.value
+    precision_0_bit = status_bits[0]
+    precision_1_bit = status_bits[1]
+    escalation_bit = status_bits[2]
 
-    assert status_value.is_resolvable, (
-        f"uio_out contains unresolved values after VALID: "
-        f"{status_value}"
+    assert precision_0_bit.is_resolvable, (
+        f"Precision bit 0 is unresolved: {precision_0_bit}"
     )
 
-    status = int(status_value)
+    assert precision_1_bit == expected_precision, (
+        f"Precision bit 1 is unresolved: {precision_1_bit}"
+    )
 
-    precision = status & 0b11
-    escalation = (status >> 2) & 0b1
+    assert escalation_bit.is_resolvable,, (
+        f"Escalation bit is unresolved: {escalation_bit}"
+    )
+
+    precision = (
+        int(precision_0_bit)
+        | (int(precision_1_bit) << 1)
+    )
+
+    escalation = int(escalation_bit)
 
     dut._log.info(
         f"Status: precision={precision}, "
@@ -183,7 +190,7 @@ async def test_project(dut):
         f"Expected escalation {expected_escalation}, "
         f"got {escalation}"
     )
-
+    
     # ============================================================
     # READ OUTPUTS
     #
