@@ -1,5 +1,5 @@
 `timescale 1ns/1ps
-`default_nettype none
+
 
 module tb;
 
@@ -12,11 +12,9 @@ module tb;
     reg        ena;
 
     reg [7:0]  ui_in;
-    wire [7:0] uo_out;
-
-    // Cocotb drives uio_in directly.
     reg [7:0]  uio_in;
-
+    
+    wire [7:0] uo_out;
     wire [7:0] uio_out;
     wire [7:0] uio_oe;
 
@@ -59,10 +57,8 @@ module tb;
 
     initial begin
         clk = 1'b0;
+        forever #5 clk = ~clk;
     end
-
-    always #5 clk = ~clk;
-
 
     // ============================================================
     // HELPER FUNCTIONS
