@@ -1,4 +1,4 @@
-`timescale 1ns/1ps
+//`timescale 1ns/1ps
 `default_nettype none
 
 module tt_um_adityarprasad_fft (
@@ -14,6 +14,8 @@ module tt_um_adityarprasad_fft (
     input  wire       rst_n
 );
 
+    wire _unused_uio = &{1'b0, uio_in[4:0]};
+    
     adaptive_fft_butterfly dut (
         .clk    (clk),
         .nreset (rst_n),
