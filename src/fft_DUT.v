@@ -1,4 +1,4 @@
-`timescale 1ns/1ps
+//`timescale 1ns/1ps
 `default_nettype none
 
 module adaptive_fft_butterfly (
@@ -79,6 +79,12 @@ module adaptive_fft_butterfly (
     reg signed [15:0] p0, p1, p2, p3;
 
     reg signed [7:0] rot_re, rot_im;
+
+    wire signed [15:0] rot_re_full;
+    wire signed [15:0] rot_im_full;
+
+    assign rot_re_full = (p0 - p1) >>> 7;
+    assign rot_im_full = (p3 + p2) >>> 7;
 
     function [7:0] abs8;
         input signed [7:0] a;
@@ -342,8 +348,8 @@ module adaptive_fft_butterfly (
                 // Complex rotation
                 // ----------------------------------------------------
                 S_CALC: begin
-                    rot_re <= $signed((p0 - p1) >>> 7);
-                    rot_im <= $signed((p3 + p2) >>> 7);
+                    rot_re <= rot_re_full[7:0];
+                    rot_im <= rot_im_full[7:0];
                     state  <= S_O0;
                 end
 
