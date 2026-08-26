@@ -81,9 +81,11 @@ module adaptive_fft_butterfly (
 
     reg signed [7:0] rot_re, rot_im;
 
+    /* verilator lint_off UNUSEDSIGNAL */
     wire signed [15:0] rot_re_full;
     wire signed [15:0] rot_im_full;
-
+    /* verilator lint_on UNUSEDSIGNAL */
+    
     assign rot_re_full = (p0 - p1) >>> 7;
     assign rot_im_full = (p3 + p2) >>> 7;
 
