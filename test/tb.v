@@ -18,6 +18,11 @@ module tb;
     wire [7:0] uio_out;
     wire [7:0] uio_oe;
 
+`ifdef GL_TEST
+    supply1 VPWR;
+    supply0 VGND;
+`endif
+
 
     // ============================================================
     // LEGACY DIRECTED-TEST CONTROL SIGNALS
@@ -44,6 +49,12 @@ module tb;
         .uio_in  (uio_in),
         .uio_out (uio_out),
         .uio_oe  (uio_oe)
+`ifdef GL_TEST
+        ,
+        .VPWR(VPWR),
+        .VGND(VGND)
+`endif
+    );
     );
 
 
