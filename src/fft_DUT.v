@@ -10,6 +10,7 @@ module adaptive_fft_butterfly (
     output wire [7:0] uio_out,
     output wire [7:0] uio_oe
 );
+    wire _unused_uio = &{1'b0, uio_in[4:0]};
 
     // ================================================================
     // Tiny Tapeout interface
