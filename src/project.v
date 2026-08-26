@@ -13,8 +13,8 @@ module tt_um_adityarprasad_fft (
     input  wire       clk,
     input  wire       rst_n
 );
-
-    wire _unused_uio = &{1'b0, uio_in[4:0]};
+    wire _unused_ena = &{1'b0, ena};
+    
     
     adaptive_fft_butterfly dut (
         .clk    (clk),
