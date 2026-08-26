@@ -131,4 +131,4 @@ The design can be verified through RTL simulation without any external hardware.
 
 For physical silicon testing, the fabricated Tiny Tapeout design can be connected to a suitable Tiny Tapeout-compatible carrier/demo board or other digital test platform capable of providing the clock, reset, input data and control signals and observing the output and status signals.
 
-No external FFT-specific hardware is required.
+No external FFT-specific hardware is used.
