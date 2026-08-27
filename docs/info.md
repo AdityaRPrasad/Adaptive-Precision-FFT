@@ -21,18 +21,18 @@ The design accepts two complex 8-bit input values through an 8-bit multiplexed i
 3. Y_re - real part of Y
 4. Y_im - imaginary part of Y
 
-The butterfly performs the complex radix-2 operation using an internally generated/stored twiddle-factor sequence. The arithmetic datapath supports three selectable precision modes: 4-bit, 6-bit and 8-bit.
+The butterfly performs a complex radix-2 butterfly operation using the twiddle-factor representation implemented in the RTL datapath. The arithmetic supports three selectable precision modes: 4-bit, 6-bit, and 8-bit.
 
 The precision is selected automatically using two hardware-friendly indicators:
 
 - a sensitivity estimate based on the magnitude of the current input operands
-- an estimated quantization-error measure compared against a programmable error budget
+- an estimated quantization-error measure compared against a 2-bit programmable error budget
 
-The controller first considers the lowest precision. If the estimated error is within the allowable budget, 4-bit precision is selected. If the estimated error is too large, the controller selects 6-bit precision. If the estimated error remains above the allowable limit, 8-bit precision is selected.
+The controller first attempts to use the lowest precision. If the estimated error is within the allowable budget, 4-bit precision is selected. If the estimated error exceeds the allowable limit, the controller escalates to 6-bit precision. If the error constraint is still not satisfied, 8-bit precision is selected.
 
 The precision-selection policy therefore attempts to use the minimum precision that satisfies the estimated error constraint.
 
-The multiplier is time-multiplexed and reused across multiple clock cycles instead of using multiple parallel multipliers. A small FSM controls input capture, precision selection, multiplication, result calculation and output sequencing.
+The multiplier is time-multiplexed and reused across multiple clock cycles instead of using multiple parallel multipliers. A small finite-state machine (FSM) controls input capture, precision selection, multiplication, result calculation, and output sequencing.
 
 The output is also multiplexed over the 8-bit output interface. The four output bytes are provided sequentially as:
 
@@ -45,10 +45,10 @@ The bidirectional interface is used for control and status signals. The pins are
 
 - uio[7:6] - 2-bit error-budget input
 - uio[5] - START input
-- uio[4] - BUSY status
-- uio[3] - VALID status
-- uio[2] - 8-bit precision escalation indicator
-- uio[1:0] - selected precision status
+- uio[4] - BUSY status output
+- uio[3] - VALID status output
+- uio[2] - precision-escalation status output
+- uio[1:0] - selected-precision status output
 
 The selected precision is encoded as:
 
