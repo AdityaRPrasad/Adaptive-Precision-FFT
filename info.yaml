@@ -1,9 +1,9 @@
 # Tiny Tapeout project information
 project:
-  title:        "Adaptive FFT Butterfly"      # Project title
-  author:       "Aditya R Prasad"      # Your name
-  discord:      ""      # Your discord username, for communication and automatically assigning you a Tapeout role (optional)
-  description:  "A sensitivity- and error-budget-driven adaptive-precision radix-2 FFT butterfly."      # One line description of what your project does
+  title:        "Adaptive-Precision FFT"      
+  author:       "Aditya R Prasad, Suddep P Hande, Shylashree N, RV College of Engineering"      
+  discord:      ""      
+  description:  "An Error-Budget-Driven Adaptive-Precision Architecture for Efficient FFT Processing"     
   language:     "Verilog" # other examples include SystemVerilog, Amaranth, VHDL, etc
   clock_hz:     100000000      # Clock frequency in Hz (or 0 if not applicable)
 
